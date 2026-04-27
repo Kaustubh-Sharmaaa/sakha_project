@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sakha — Premium Tech Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════
+       AUTH SCREEN  (shown when not logged in)
+       ════════════════════════════════════════════ -->
+  <div id="auth-screen">
+    <div class="auth-right">
+      <div class="auth-card">
+        <div class="auth-card-brand">
+          <div class="auth-logo-mark">S</div>
+          <span class="auth-brand-name">Sakha</span>
+        </div>
+      <div class="auth-form-wrap">
+        <h1 id="auth-heading">Welcome back</h1>
+        <p id="auth-sub">Sign in to your account to continue</p>
+
+        <form id="auth-form" novalidate>
+          <div class="field hidden" id="name-group">
+            <label for="f-name">Full name</label>
+            <input type="text" id="f-name" autocomplete="name" placeholder="Jane Doe" />
+          </div>
+          <div class="field">
+            <label for="f-email">Email address</label>
+            <input type="email" id="f-email" autocomplete="email" placeholder="you@example.com" required />
+          </div>
+          <div class="field">
+            <label for="f-password">Password</label>
+            <input type="password" id="f-password" autocomplete="current-password" placeholder="••••••••" required />
+          </div>
+          <div id="auth-error" class="field-error hidden" role="alert"></div>
+          <button type="submit" id="auth-submit-btn" class="btn-primary">Sign in</button>
+        </form>
+
+        <p class="auth-toggle-row">
+          <span id="auth-mode-label">Don't have an account?</span>
+          <a href="#" id="auth-toggle-link">Create one</a>
+        </p>
+      </div>
+      </div><!-- /auth-card -->
+    </div>
+  </div><!-- /auth-screen -->
+
+
+  <!-- ════════════════════════════════════════════
+       APP SCREEN  (shown when logged in)
+       ════════════════════════════════════════════ -->
+  <div id="app-screen" class="hidden">
+
+    <!-- ── HEADER ── -->
+    <header class="site-header" id="site-header">
+      <div class="header-inner">
+        <a class="logo" href="#" data-view="home">
+          <span class="logo-mark">S</span>
+          <span class="logo-text">Sakha</span>
+        </a>
+
+        <nav class="header-nav">
+          <a href="#" class="nav-link" data-view="home">Home</a>
+          <a href="#" class="nav-link" data-view="shop">Shop</a>
+          <a href="#" class="nav-link" data-scroll="section-categories">Categories</a>
+        </nav>
+
+        <div class="header-search">
+          <div class="search-wrap">
+            <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="search-input" class="search-input" placeholder="Search products…" autocomplete="off" />
+            <div class="search-suggestions" id="search-suggestions"></div>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="icon-btn" id="header-wishlist-btn" title="Wishlist" data-view="wishlist">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span class="badge" id="wishlist-badge" style="display:none">0</span>
+          </button>
+
+          <button class="icon-btn" id="header-cart-btn" title="Cart">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <span class="badge" id="cart-badge" style="display:none">0</span>
+          </button>
+
+          <div class="auth-area" id="auth-area"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── VIEWS ── -->
+    <main class="main" id="main">
+
+      <!-- HOME -->
+      <div class="view" id="view-home" data-view="home">
+        <section class="hero" id="hero">
+          <div class="hero-content">
+            <div class="hero-copy">
+              <p class="hero-eyebrow">New Collection 2026</p>
+              <h1 class="hero-headline">Technology<br /><em>that inspires</em><br />your world.</h1>
+              <p class="hero-tagline">Premium tech, curated for you.</p>
+              <div class="hero-cta-row">
+                <button class="btn btn-primary btn-lg" id="hero-shop-btn">Shop Now</button>
+                <button class="btn btn-ghost btn-lg" data-view="shop">Explore All</button>
+              </div>
+            </div>
+            <div class="hero-visual">
+              <div class="hero-card-float" id="hero-featured-card"></div>
+            </div>
+          </div>
+          <div class="hero-gradient-bg"></div>
+        </section>
+
+        <section class="section" id="section-categories">
+          <div class="section-header">
+            <h2 class="section-title">Shop by Category</h2>
+            <a href="#" class="section-link" data-view="shop">View all →</a>
+          </div>
+          <div class="category-row" id="category-row">
+            <div class="skeleton-row">
+              <div class="skeleton cat-skeleton"></div>
+              <div class="skeleton cat-skeleton"></div>
+              <div class="skeleton cat-skeleton"></div>
+              <div class="skeleton cat-skeleton"></div>
+              <div class="skeleton cat-skeleton"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">Trending Now</h2>
+            <a href="#" class="section-link" data-view="shop">See more →</a>
+          </div>
+          <div class="product-strip" id="trending-strip">
+            <div class="skeleton-row">
+              <div class="skeleton product-skeleton"></div>
+              <div class="skeleton product-skeleton"></div>
+              <div class="skeleton product-skeleton"></div>
+              <div class="skeleton product-skeleton"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">Featured Products</h2>
+            <a href="#" class="section-link" data-view="shop">View all →</a>
+          </div>
+          <div class="product-grid" id="featured-grid">
+            <div class="skeleton product-skeleton"></div>
+            <div class="skeleton product-skeleton"></div>
+            <div class="skeleton product-skeleton"></div>
+            <div class="skeleton product-skeleton"></div>
+            <div class="skeleton product-skeleton"></div>
+            <div class="skeleton product-skeleton"></div>
+            <div class="skeleton product-skeleton"></div>
+            <div class="skeleton product-skeleton"></div>
+          </div>
+        </section>
+      </div><!-- /view-home -->
+
+      <!-- SHOP -->
+      <div class="view hidden" id="view-shop" data-view="shop">
+        <div class="shop-layout">
+          <aside class="shop-sidebar" id="shop-sidebar">
+            <div class="sidebar-section">
+              <h3 class="sidebar-title">Categories</h3>
+              <div class="filter-list" id="filter-categories"></div>
+            </div>
+            <div class="sidebar-section">
+              <h3 class="sidebar-title">Brands</h3>
+              <div class="filter-list" id="filter-brands"></div>
+            </div>
+            <div class="sidebar-section">
+              <h3 class="sidebar-title">Price Range</h3>
+              <div class="price-range-wrap">
+                <div class="price-inputs">
+                  <input type="number" id="price-min" class="price-input" placeholder="Min" min="0" />
+                  <span class="price-sep">—</span>
+                  <input type="number" id="price-max" class="price-input" placeholder="Max" min="0" />
+                </div>
+                <button class="btn btn-sm btn-outline" id="apply-price">Apply</button>
+              </div>
+            </div>
+            <div class="sidebar-section">
+              <label class="toggle-label">
+                <input type="checkbox" id="in-stock-toggle" class="toggle-input" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-text">In Stock Only</span>
+              </label>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="clear-filters" style="margin-top:12px">Clear Filters</button>
+          </aside>
+
+          <div class="shop-main">
+            <div class="shop-toolbar">
+              <p class="result-count" id="result-count">Loading products…</p>
+              <select class="sort-select" id="sort-select">
+                <option value="">Sort: Featured</option>
+                <option value="price_asc">Price: Low → High</option>
+                <option value="price_desc">Price: High → Low</option>
+                <option value="rating_desc">Top Rated</option>
+                <option value="newest">Newest</option>
+              </select>
+            </div>
+            <div class="product-grid" id="shop-grid">
+              <div class="skeleton product-skeleton"></div>
+              <div class="skeleton product-skeleton"></div>
+              <div class="skeleton product-skeleton"></div>
+              <div class="skeleton product-skeleton"></div>
+              <div class="skeleton product-skeleton"></div>
+              <div class="skeleton product-skeleton"></div>
+            </div>
+            <div class="pagination" id="shop-pagination"></div>
+          </div>
+        </div>
+      </div><!-- /view-shop -->
+
+      <!-- WISHLIST -->
+      <div class="view hidden" id="view-wishlist" data-view="wishlist">
+        <div class="page-section">
+          <h2 class="page-title">My Wishlist</h2>
+          <div class="product-grid" id="wishlist-grid"></div>
+          <div class="empty-state hidden" id="wishlist-empty">
+            <div class="empty-icon">♡</div>
+            <p>Your wishlist is empty.</p>
+            <button class="btn btn-primary" data-view="shop">Browse Products</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="view hidden" id="view-orders" data-view="orders">
+        <div class="page-section">
+          <h2 class="page-title">My Orders</h2>
+          <div id="orders-list">
+            <div class="empty-state">
+              <div class="empty-icon">📦</div>
+              <p>No orders yet.</p>
+              <button class="btn btn-primary" data-view="shop">Start Shopping</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ── CART DRAWER ── -->
+    <div class="drawer-overlay" id="cart-overlay"></div>
+    <aside class="cart-drawer" id="cart-drawer">
+      <div class="drawer-header">
+        <h2 class="drawer-title">Your Cart</h2>
+        <button class="icon-btn close-btn" id="close-cart">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="cart-items" id="cart-items">
+        <div class="empty-state"><div class="empty-icon">🛒</div><p>Your cart is empty.</p></div>
+      </div>
+      <div class="cart-footer" id="cart-footer" style="display:none">
+        <div class="coupon-row">
+          <input type="text" id="coupon-input" class="coupon-input" placeholder="Coupon code…" />
+          <button class="btn btn-outline btn-sm" id="apply-coupon">Apply</button>
+        </div>
+        <div class="coupon-message" id="coupon-message"></div>
+        <div class="cart-totals">
+          <div class="totals-row"><span>Subtotal</span><span id="cart-subtotal">$0.00</span></div>
+          <div class="totals-row discount-row" id="discount-row" style="display:none">
+            <span>Discount</span><span id="cart-discount" class="discount-val">-$0.00</span>
+          </div>
+          <div class="totals-row totals-total"><span>Total</span><span id="cart-total">$0.00</span></div>
+        </div>
+        <button class="btn btn-primary btn-full" id="checkout-btn">Checkout</button>
+      </div>
+    </aside>
+
+    <!-- ── PRODUCT MODAL ── -->
+    <div class="modal-overlay hidden" id="product-modal-overlay">
+      <div class="modal product-modal" id="product-modal">
+        <button class="icon-btn close-btn modal-close" id="close-product-modal">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="modal-body">
+          <div class="modal-left">
+            <div class="modal-thumb" id="modal-thumb"></div>
+          </div>
+          <div class="modal-right">
+            <p class="modal-brand" id="modal-brand"></p>
+            <h2 class="modal-name" id="modal-name"></h2>
+            <p class="modal-sku" id="modal-sku"></p>
+            <div class="modal-rating" id="modal-rating"></div>
+            <p class="modal-price" id="modal-price"></p>
+            <div class="modal-variants" id="modal-variants"></div>
+            <p class="modal-desc" id="modal-desc"></p>
+            <div class="modal-actions">
+              <button class="btn btn-primary btn-lg" id="modal-add-cart">Add to Cart</button>
+              <button class="icon-btn wishlist-toggle" id="modal-wishlist-btn" title="Add to Wishlist">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-tabs">
+          <button class="tab-btn active" data-tab="reviews">Reviews</button>
+          <button class="tab-btn" data-tab="qa">Q&amp;A</button>
+        </div>
+        <div class="tab-panel active" id="tab-reviews"></div>
+        <div class="tab-panel hidden" id="tab-qa"></div>
+      </div>
+    </div>
+
+  </div><!-- /app-screen -->
+
+  <!-- ── TOAST ── -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

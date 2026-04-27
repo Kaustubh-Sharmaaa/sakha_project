@@ -1,0 +1,870 @@
+{
+  "info": {
+    "name": "Sakha Product API",
+    "_postman_id": "sakha-product-api-v1",
+    "description": "Full test collection for the Sakha Product API. Run Auth > Register then Auth > Login first — the token is saved automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",    "value": "http://localhost:8080/api/v1" },
+    { "key": "token",       "value": "" },
+    { "key": "product_id",  "value": "" },
+    { "key": "variant_id",  "value": "" },
+    { "key": "category_id", "value": "" },
+    { "key": "brand_id",    "value": "" },
+    { "key": "cart_id",     "value": "" },
+    { "key": "order_id",    "value": "" },
+    { "key": "wishlist_id", "value": "" },
+    { "key": "review_id",   "value": "" },
+    { "key": "coupon_code", "value": "SAVE10" }
+  ],
+  "item": [
+
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.access_token) {",
+            "  pm.collectionVariables.set('token', r.access_token);",
+            "  console.log('Token saved');",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@sakha.com\",\n  \"password\": \"Sakha123!\",\n  \"name\": \"Admin User\",\n  \"role\": \"admin\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth","register"] }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.access_token) {",
+            "  pm.collectionVariables.set('token', r.access_token);",
+            "  console.log('Token saved');",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@sakha.com\",\n  \"password\": \"Sakha123!\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth","login"] }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth","me"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Create Product",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.id) pm.collectionVariables.set('product_id', r.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Classic White Tee\",\n  \"description\": \"A comfortable everyday t-shirt\",\n  \"sku\": \"TEE-WHITE-001\",\n  \"status\": \"draft\",\n  \"tags\": [\"clothing\", \"basics\"],\n  \"metadata\": {}\n}" },
+            "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] }
+          }
+        },
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products?page=1&limit=20", "host": ["{{base_url}}"], "path": ["products"], "query": [
+              { "key": "page", "value": "1" },
+              { "key": "limit", "value": "20" },
+              { "key": "category_id", "value": "", "disabled": true },
+              { "key": "brand_id", "value": "", "disabled": true },
+              { "key": "status", "value": "active", "disabled": true }
+            ]}
+          }
+        },
+        {
+          "name": "Get Product",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["products","{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Classic White Tee (Updated)\",\n  \"tags\": [\"clothing\", \"basics\", \"sale\"]\n}" },
+            "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["products","{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Publish Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/publish", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","publish"] }
+          }
+        },
+        {
+          "name": "Unpublish Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/unpublish", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","unpublish"] }
+          }
+        },
+        {
+          "name": "Duplicate Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"new_name\": \"Classic White Tee (Copy)\"\n}" },
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/duplicate", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","duplicate"] }
+          }
+        },
+        {
+          "name": "Update SEO",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"meta_title\": \"Classic White Tee | Sakha\",\n  \"meta_description\": \"Shop our best-selling everyday t-shirt.\",\n  \"slug\": \"classic-white-tee\"\n}" },
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/seo", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","seo"] }
+          }
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["products","{{product_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Variants",
+      "item": [
+        {
+          "name": "Create Variant",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.id) pm.collectionVariables.set('variant_id', r.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"sku\": \"TEE-WHITE-001-M\",\n  \"price\": 24.99,\n  \"compare_at_price\": 29.99,\n  \"stock\": 100,\n  \"options\": { \"size\": \"M\", \"color\": \"White\" }\n}" },
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/variants", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","variants"] }
+          }
+        },
+        {
+          "name": "List Variants",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/variants", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","variants"] }
+          }
+        },
+        {
+          "name": "Update Variant",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 22.99,\n  \"stock\": 150\n}" },
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/variants/{{variant_id}}", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","variants","{{variant_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Variant",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/variants/{{variant_id}}", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","variants","{{variant_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "Get Stock",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/stock", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","stock"] }
+          }
+        },
+        {
+          "name": "Adjust Stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"quantity\": 50,\n  \"reason\": \"restock\",\n  \"note\": \"Received new shipment\"\n}" },
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/stock/adjust", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","stock","adjust"] }
+          }
+        },
+        {
+          "name": "Reserve Stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"quantity\": 2,\n  \"order_ref\": \"temp-hold\"\n}" },
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/stock/reserve", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","stock","reserve"] }
+          }
+        },
+        {
+          "name": "Low Stock",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/products/stock/low?threshold=10", "host": ["{{base_url}}"], "path": ["products","stock","low"], "query": [{ "key": "threshold", "value": "10" }] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/categories", "host": ["{{base_url}}"], "path": ["categories"] }
+          }
+        },
+        {
+          "name": "Create Category",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.id) pm.collectionVariables.set('category_id', r.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Clothing\",\n  \"slug\": \"clothing\",\n  \"description\": \"All clothing items\"\n}" },
+            "url": { "raw": "{{base_url}}/categories", "host": ["{{base_url}}"], "path": ["categories"] }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Fashion and clothing\"\n}" },
+            "url": { "raw": "{{base_url}}/categories/{{category_id}}", "host": ["{{base_url}}"], "path": ["categories","{{category_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Brands",
+      "item": [
+        {
+          "name": "List Brands",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/brands", "host": ["{{base_url}}"], "path": ["brands"] }
+          }
+        },
+        {
+          "name": "Create Brand",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.id) pm.collectionVariables.set('brand_id', r.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Sakha Originals\",\n  \"slug\": \"sakha-originals\",\n  \"description\": \"In-house brand\",\n  \"website\": \"https://sakha.com\"\n}" },
+            "url": { "raw": "{{base_url}}/brands", "host": ["{{base_url}}"], "path": ["brands"] }
+          }
+        },
+        {
+          "name": "Brand Products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/brands/{{brand_id}}/products", "host": ["{{base_url}}"], "path": ["brands","{{brand_id}}","products"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Basic Search",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/search?q=tee", "host": ["{{base_url}}"], "path": ["products","search"], "query": [{ "key": "q", "value": "tee" }] }
+          }
+        },
+        {
+          "name": "Faceted Filter",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/filter?min_price=10&max_price=50&in_stock=true&page=1&limit=20",
+              "host": ["{{base_url}}"], "path": ["products","filter"],
+              "query": [
+                { "key": "q", "value": "", "disabled": true },
+                { "key": "category_id", "value": "", "disabled": true },
+                { "key": "brand_id", "value": "", "disabled": true },
+                { "key": "min_price", "value": "10" },
+                { "key": "max_price", "value": "50" },
+                { "key": "in_stock", "value": "true" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Trending",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/trending", "host": ["{{base_url}}"], "path": ["products","trending"] }
+          }
+        },
+        {
+          "name": "Suggestions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/suggestions?q=tee", "host": ["{{base_url}}"], "path": ["products","suggestions"], "query": [{ "key": "q", "value": "tee" }] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Create Cart",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.id) pm.collectionVariables.set('cart_id', r.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"user_id\": null\n}" },
+            "url": { "raw": "{{base_url}}/cart", "host": ["{{base_url}}"], "path": ["cart"] }
+          }
+        },
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/cart/{{cart_id}}", "host": ["{{base_url}}"], "path": ["cart","{{cart_id}}"] }
+          }
+        },
+        {
+          "name": "Cart Summary",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/cart/{{cart_id}}/summary", "host": ["{{base_url}}"], "path": ["cart","{{cart_id}}","summary"] }
+          }
+        },
+        {
+          "name": "Add Item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"quantity\": 2\n}" },
+            "url": { "raw": "{{base_url}}/cart/{{cart_id}}/items", "host": ["{{base_url}}"], "path": ["cart","{{cart_id}}","items"] }
+          }
+        },
+        {
+          "name": "Apply Coupon",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"{{coupon_code}}\"\n}" },
+            "url": { "raw": "{{base_url}}/cart/{{cart_id}}/coupon", "host": ["{{base_url}}"], "path": ["cart","{{cart_id}}","coupon"] }
+          }
+        },
+        {
+          "name": "Remove Coupon",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/cart/{{cart_id}}/coupon", "host": ["{{base_url}}"], "path": ["cart","{{cart_id}}","coupon"] }
+          }
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/cart/{{cart_id}}/clear", "host": ["{{base_url}}"], "path": ["cart","{{cart_id}}","clear"] }
+          }
+        },
+        {
+          "name": "Merge Carts",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"guest_cart_id\": \"GUEST_CART_ID\",\n  \"user_cart_id\": \"{{cart_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/cart/merge", "host": ["{{base_url}}"], "path": ["cart","merge"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Place Order",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.id) pm.collectionVariables.set('order_id', r.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"cart_id\": \"{{cart_id}}\",\n  \"shipping_address\": {\n    \"name\": \"John Doe\",\n    \"line1\": \"123 Main St\",\n    \"city\": \"Austin\",\n    \"state\": \"TX\",\n    \"zip\": \"78701\",\n    \"country\": \"US\"\n  },\n  \"billing_address\": {\n    \"name\": \"John Doe\",\n    \"line1\": \"123 Main St\",\n    \"city\": \"Austin\",\n    \"state\": \"TX\",\n    \"zip\": \"78701\",\n    \"country\": \"US\"\n  },\n  \"payment_method_id\": \"pm_test_card\"\n}" },
+            "url": { "raw": "{{base_url}}/orders", "host": ["{{base_url}}"], "path": ["orders"] }
+          }
+        },
+        {
+          "name": "My Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/orders", "host": ["{{base_url}}"], "path": ["orders"] }
+          }
+        },
+        {
+          "name": "Get Order",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["orders","{{order_id}}"] }
+          }
+        },
+        {
+          "name": "Order Tracking",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/orders/{{order_id}}/tracking", "host": ["{{base_url}}"], "path": ["orders","{{order_id}}","tracking"] }
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Changed my mind\"\n}" },
+            "url": { "raw": "{{base_url}}/orders/{{order_id}}/cancel", "host": ["{{base_url}}"], "path": ["orders","{{order_id}}","cancel"] }
+          }
+        },
+        {
+          "name": "Update Order Status (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"shipped\",\n  \"tracking_number\": \"1Z999AA10123456784\",\n  \"carrier\": \"UPS\"\n}" },
+            "url": { "raw": "{{base_url}}/orders/{{order_id}}/status", "host": ["{{base_url}}"], "path": ["orders","{{order_id}}","status"] }
+          }
+        },
+        {
+          "name": "Refund Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"items\": [\n    { \"order_item_id\": \"ITEM_ID\", \"quantity\": 1 }\n  ],\n  \"reason\": \"Item arrived damaged\",\n  \"refund_method\": \"original_payment\"\n}" },
+            "url": { "raw": "{{base_url}}/orders/{{order_id}}/refund", "host": ["{{base_url}}"], "path": ["orders","{{order_id}}","refund"] }
+          }
+        },
+        {
+          "name": "Get Invoice",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/orders/{{order_id}}/invoice", "host": ["{{base_url}}"], "path": ["orders","{{order_id}}","invoice"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Reviews & Q&A",
+      "item": [
+        {
+          "name": "Submit Review",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.id) pm.collectionVariables.set('review_id', r.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"rating\": 5,\n  \"title\": \"Great product!\",\n  \"body\": \"Really comfortable and true to size.\",\n  \"order_id\": \"{{order_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/reviews", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","reviews"] }
+          }
+        },
+        {
+          "name": "List Reviews",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/reviews", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","reviews"] }
+          }
+        },
+        {
+          "name": "Rating Summary",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/rating-summary", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","rating-summary"] }
+          }
+        },
+        {
+          "name": "Mark Review Helpful",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/reviews/{{review_id}}/helpful", "host": ["{{base_url}}"], "path": ["reviews","{{review_id}}","helpful"] }
+          }
+        },
+        {
+          "name": "Ask a Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"body\": \"Does this shirt run small?\"\n}" },
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/questions", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","questions"] }
+          }
+        },
+        {
+          "name": "List Questions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/questions", "host": ["{{base_url}}"], "path": ["products","{{product_id}}","questions"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Wishlist",
+      "item": [
+        {
+          "name": "Create Wishlist",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.id) pm.collectionVariables.set('wishlist_id', r.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"My Wishlist\",\n  \"is_public\": false\n}" },
+            "url": { "raw": "{{base_url}}/wishlist", "host": ["{{base_url}}"], "path": ["wishlist"] }
+          }
+        },
+        {
+          "name": "My Wishlists",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/wishlist", "host": ["{{base_url}}"], "path": ["wishlist"] }
+          }
+        },
+        {
+          "name": "Add to Wishlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"product_id\": \"{{product_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/wishlist/{{wishlist_id}}/items", "host": ["{{base_url}}"], "path": ["wishlist","{{wishlist_id}}","items"] }
+          }
+        },
+        {
+          "name": "Move to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"item_ids\": [],\n  \"cart_id\": \"{{cart_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/wishlist/{{wishlist_id}}/move-to-cart", "host": ["{{base_url}}"], "path": ["wishlist","{{wishlist_id}}","move-to-cart"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Coupons",
+      "item": [
+        {
+          "name": "Create Coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"SAVE10\",\n  \"type\": \"percentage\",\n  \"value\": 10,\n  \"min_order_value\": 20,\n  \"usage_limit\": 100,\n  \"per_user_limit\": 1\n}" },
+            "url": { "raw": "{{base_url}}/coupons", "host": ["{{base_url}}"], "path": ["coupons"] }
+          }
+        },
+        {
+          "name": "List Coupons",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/coupons", "host": ["{{base_url}}"], "path": ["coupons"] }
+          }
+        },
+        {
+          "name": "Validate Coupon",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"SAVE10\",\n  \"cart_id\": \"{{cart_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/coupons/validate", "host": ["{{base_url}}"], "path": ["coupons","validate"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Pricing",
+      "item": [
+        {
+          "name": "Get Product Pricing",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/pricing/{{product_id}}", "host": ["{{base_url}}"], "path": ["pricing","{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Create Pricing Rule",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"rule_type\": \"volume\",\n  \"tiers\": [\n    { \"min_qty\": 1,  \"price\": 24.99 },\n    { \"min_qty\": 5,  \"price\": 21.99 },\n    { \"min_qty\": 10, \"price\": 18.99 }\n  ]\n}" },
+            "url": { "raw": "{{base_url}}/pricing/rules", "host": ["{{base_url}}"], "path": ["pricing","rules"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Bulk",
+      "item": [
+        {
+          "name": "Export Products (JSON)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/products/export?format=json", "host": ["{{base_url}}"], "path": ["products","export"], "query": [{ "key": "format", "value": "json" }] }
+          }
+        },
+        {
+          "name": "Export Products (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/products/export?format=csv", "host": ["{{base_url}}"], "path": ["products","export"], "query": [{ "key": "format", "value": "csv" }] }
+          }
+        },
+        {
+          "name": "Bulk Publish",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"product_ids\": [\"{{product_id}}\"]\n}" },
+            "url": { "raw": "{{base_url}}/products/bulk/publish", "host": ["{{base_url}}"], "path": ["products","bulk","publish"] }
+          }
+        },
+        {
+          "name": "Bulk Price Update",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"updates\": [\n    { \"product_id\": \"{{product_id}}\", \"price\": 19.99 }\n  ]\n}" },
+            "url": { "raw": "{{base_url}}/products/bulk/update-price", "host": ["{{base_url}}"], "path": ["products","bulk","update-price"] }
+          }
+        },
+        {
+          "name": "Import Products (dry run) — use Body > form-data, key=file",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "description": "CSV or JSON file" },
+                { "key": "mode", "value": "upsert", "type": "text" },
+                { "key": "dry_run", "value": "true", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/products/import", "host": ["{{base_url}}"], "path": ["products","import"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Top Selling",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/analytics/products/top-selling?metric=revenue&limit=10", "host": ["{{base_url}}"], "path": ["analytics","products","top-selling"], "query": [
+              { "key": "metric", "value": "revenue" },
+              { "key": "limit", "value": "10" },
+              { "key": "from_date", "value": "", "disabled": true },
+              { "key": "to_date", "value": "", "disabled": true }
+            ]}
+          }
+        },
+        {
+          "name": "Product Views",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/analytics/products/views?granularity=day", "host": ["{{base_url}}"], "path": ["analytics","products","views"], "query": [
+              { "key": "granularity", "value": "day" },
+              { "key": "product_id", "value": "", "disabled": true }
+            ]}
+          }
+        },
+        {
+          "name": "Conversion Funnel",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/analytics/products/conversion", "host": ["{{base_url}}"], "path": ["analytics","products","conversion"], "query": [
+              { "key": "product_id", "value": "", "disabled": true }
+            ]}
+          }
+        },
+        {
+          "name": "Revenue Breakdown",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/analytics/products/revenue?group_by=product", "host": ["{{base_url}}"], "path": ["analytics","products","revenue"], "query": [
+              { "key": "group_by", "value": "product" }
+            ]}
+          }
+        },
+        {
+          "name": "Inventory Turnover",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/analytics/inventory/turnover", "host": ["{{base_url}}"], "path": ["analytics","inventory","turnover"] }
+          }
+        },
+        {
+          "name": "Review Sentiment",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/analytics/reviews/sentiment", "host": ["{{base_url}}"], "path": ["analytics","reviews","sentiment"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:8080/health", "host": ["http://localhost:8080"], "path": ["health"] }
+          }
+        }
+      ]
+    }
+
+  ]
+}
