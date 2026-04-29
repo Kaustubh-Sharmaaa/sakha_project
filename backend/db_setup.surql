@@ -6,6 +6,18 @@
 -- Users
 DEFINE INDEX idx_user_email ON user FIELDS email UNIQUE;
 
+-- Sessions
+DEFINE INDEX idx_session_user ON sessions FIELDS user_id;
+DEFINE INDEX idx_session_hash ON sessions FIELDS refresh_token_hash UNIQUE;
+
+-- Email Verifications
+DEFINE INDEX idx_email_verif_code ON email_verifications FIELDS code UNIQUE;
+DEFINE INDEX idx_email_verif_user ON email_verifications FIELDS user_id;
+
+-- Password Resets
+DEFINE INDEX idx_pass_reset_code ON password_resets FIELDS code UNIQUE;
+DEFINE INDEX idx_pass_reset_user ON password_resets FIELDS user_id;
+
 -- Products
 DEFINE INDEX idx_product_sku      ON product FIELDS sku UNIQUE;
 DEFINE INDEX idx_product_status   ON product FIELDS status;

@@ -1,0 +1,54 @@
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    user: root
+    command: start --log info --user root --pass root surrealkv:/data/sakha.db
+    volumes:
+      - surreal_data:/data
+    healthcheck:
+      test: ["CMD", "/surreal", "is-ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  product-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file: ./backend/.env
+    environment:
+      SURREAL_URL: ws://surrealdb:8000/rpc
+      AUTH_API_BASE: http://auth-api:8001
+    ports:
+      - "8080:8080"
+    depends_on:
+      surrealdb:
+        condition: service_healthy
+
+  auth-api:
+    build:
+      context: ./surreal-auth-api/backend
+      dockerfile: Dockerfile
+    env_file: ./surreal-auth-api/backend/.env
+    environment:
+      SURREAL_URL: ws://surrealdb:8000/rpc
+      APP_BASE_URL: http://localhost
+      FRONTEND_BASE_URL: http://localhost
+    ports:
+      - "8001:8001"
+    depends_on:
+      surrealdb:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - product-api
+      - auth-api
+
+volumes:
+  surreal_data:

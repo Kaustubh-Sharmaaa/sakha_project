@@ -5,10 +5,15 @@
  */
 
 /* ── Config ──────────────────────────────────────────────── */
+// In Docker, nginx serves /config.js which sets window.SAKHA_CONFIG with
+// relative paths so all traffic flows through the nginx reverse proxy.
+// In local dev (no Docker), the fallback localhost URLs are used instead.
+const _rc = window.SAKHA_CONFIG || {};
 const CONFIG = {
-  API: 'http://localhost:8080/api/v1',
+  API:       _rc.API       ?? 'http://localhost:8080/api/v1',
+  AUTH_API:  _rc.AUTH_API  ?? 'http://localhost:8001',
   LOW_STOCK: 10,
-  PER_PAGE: 12,
+  PER_PAGE:  12,
 };
 
 /* ── Category display helpers ────────────────────────────── */
@@ -40,6 +45,35 @@ const TokenStore = {
   },
   getRefresh() { return localStorage.getItem('sakha_refresh'); },
   clear() { this.access = null; localStorage.removeItem('sakha_refresh'); },
+};
+
+/* ================================================================
+   AUTH API HELPER  (points at the surreal-auth-api microservice)
+   ================================================================ */
+const authApi = {
+  async post(path, body) {
+    try {
+      const r = await fetch(`${CONFIG.AUTH_API}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (r.status === 204) return {};
+      const d = await r.json().catch(() => null);
+      if (!r.ok) return { _err: r.status, _msg: d?.detail ?? null };
+      return d;
+    } catch { return null; }
+  },
+  async get(path, token = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    try {
+      const r = await fetch(`${CONFIG.AUTH_API}${path}`, { method: 'GET', headers });
+      if (r.status === 204) return {};
+      const d = await r.json().catch(() => null);
+      return r.ok ? d : null;
+    } catch { return null; }
+  },
 };
 
 /* ================================================================
@@ -108,7 +142,7 @@ const Auth = {
   async refresh() {
     const refresh = TokenStore.getRefresh();
     if (!refresh) return false;
-    const data = await api.post('/auth/refresh', { refresh_token: refresh }, false);
+    const data = await authApi.post('/auth/refresh', { refresh_token: refresh });
     if (data?.access_token) {
       TokenStore.set(data.access_token, data.refresh_token);
       return true;
@@ -118,33 +152,51 @@ const Auth = {
   },
 
   async login(email, password) {
-    const data = await api.post('/auth/login', { email, password }, false);
+    const data = await authApi.post('/auth/login', { email, password });
     if (data?.access_token) {
       TokenStore.set(data.access_token, data.refresh_token);
       this.user = { email };
       await this._fetchMe();
-      return true;
+      return { ok: true };
     }
-    return false;
+    if (data?._err === 403) return { ok: false, unverified: true };
+    return { ok: false };
   },
 
   async register(name, email, password) {
-    const data = await api.post('/auth/register', { name, email, password, role: 'user' }, false);
-    if (data?.access_token) {
-      TokenStore.set(data.access_token, data.refresh_token);
-      this.user = { name, email };
-      await this._fetchMe();
+    const data = await authApi.post('/auth/signup', { name, email, password });
+    // signup returns the created user (or array); no access_token yet — email verification required
+    if (data && (Array.isArray(data) ? data.length > 0 : data.id || data.email)) {
       return true;
     }
     return false;
   },
 
   async _fetchMe() {
-    const me = await api.get('/auth/me');
+    const me = await authApi.get('/auth/me', TokenStore.access);
     if (me) this.user = me;
   },
 
+  async verifyEmail(code) {
+    const data = await authApi.get(`/auth/verify-email?code=${encodeURIComponent(code)}`);
+    return !!data?.verified;
+  },
+
+  async requestPasswordReset(email) {
+    const data = await authApi.post('/auth/reset-password/request', { email });
+    return !!data;
+  },
+
+  async resetPassword(code, password, confirmPass) {
+    const data = await authApi.post('/auth/reset-password/confirm', { code, password, confirmPass });
+    return data?.success;
+  },
+
   logout() {
+    const refresh = TokenStore.getRefresh();
+    if (refresh) {
+      authApi.post('/auth/logout', { refresh_token: refresh }).catch(() => null);
+    }
     TokenStore.clear();
     this.user = null;
     Cart.reset();
@@ -823,6 +875,78 @@ function setupAuthScreen() {
     Auth.setMode(Auth.mode === 'login' ? 'register' : 'login');
   });
 
+  // Toggle Forgot Password
+  $('forgot-pass-link')?.addEventListener('click', e => {
+    e.preventDefault();
+    $('login-view')?.classList.add('hidden');
+    $('forgot-view')?.classList.remove('hidden');
+  });
+
+  $('back-to-login-link')?.addEventListener('click', e => {
+    e.preventDefault();
+    $('forgot-view')?.classList.add('hidden');
+    $('login-view')?.classList.remove('hidden');
+  });
+
+  // Forgot Password Form
+  $('forgot-form')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('forgot-submit-btn');
+    const email = $('forgot-email')?.value.trim();
+    if (!email) return;
+    
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    await Auth.requestPasswordReset(email);
+    
+    Toast.show('If your email exists, a password reset link has been sent.', 'info', 6000);
+    btn.textContent = 'Link Sent!';
+    setTimeout(() => {
+       $('forgot-view')?.classList.add('hidden');
+       $('login-view')?.classList.remove('hidden');
+       btn.disabled = false;
+       btn.textContent = 'Send Reset Link';
+    }, 2000);
+  });
+
+  // Reset Password Form
+  $('reset-form')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('reset-submit-btn');
+    const pass = $('reset-pass')?.value;
+    const confirm = $('reset-confirm')?.value;
+    const err = $('reset-error');
+    
+    if (!pass || pass !== confirm) {
+        if(err) { err.textContent = 'Passwords do not match'; err.classList.remove('hidden'); }
+        return;
+    }
+    
+    // Grab code from the URL, or from the dataset fallback we added on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code') || $('reset-form').dataset.code;
+    
+    if (!code) {
+        if(err) { err.textContent = 'Missing reset code.'; err.classList.remove('hidden'); }
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = 'Updating...';
+    
+    const ok = await Auth.resetPassword(code, pass, confirm);
+    if (ok) {
+       Toast.show('Password updated successfully! Please log in.', 'success', 5000);
+       window.history.replaceState({}, document.title, window.location.pathname);
+       $('reset-view')?.classList.add('hidden');
+       $('login-view')?.classList.remove('hidden');
+    } else {
+       if(err) { err.textContent = 'Invalid or expired reset link.'; err.classList.remove('hidden'); }
+       btn.disabled = false;
+       btn.textContent = 'Update Password';
+    }
+  });
+
   $('auth-form')?.addEventListener('submit', async e => {
     e.preventDefault();
     hideAuthError();
@@ -834,18 +958,38 @@ function setupAuthScreen() {
     btn.textContent = Auth.mode === 'login' ? 'Signing in…' : 'Creating account…';
 
     let ok = false;
-    if (Auth.mode === 'login') {
+    let isRegister = Auth.mode === 'register';
+
+    if (!isRegister) {
       ok = await Auth.login(email, pass);
-      if (!ok) showAuthError('Invalid email or password. Please try again.');
+      if (!ok.ok) {
+        if (ok.unverified) {
+          showAuthError('Your email hasn\'t been verified yet. Please check your inbox for the verification link.');
+        } else {
+          showAuthError('Invalid email or password. Please try again.');
+        }
+      }
     } else {
       if (!name) { showAuthError('Please enter your full name.'); btn.disabled = false; btn.textContent = 'Create account'; return; }
       ok = await Auth.register(name, email, pass);
-      if (!ok) showAuthError('Registration failed. The email may already be in use.');
+      if (!ok) {
+        showAuthError('Registration failed. The email may already be in use.');
+      } else {
+        // Show success message and switch to login mode
+        btn.disabled = false;
+        btn.textContent = 'Create account';
+        
+        Toast.show('Success! Please check your email for a verification link.', 'success', 6000);
+        Auth.setMode('login');
+        
+        // Don't auto-login, wait for user to verify email
+        return;
+      }
     }
 
     btn.disabled = false;
-    btn.textContent = Auth.mode === 'login' ? 'Sign in' : 'Create account';
-    if (ok) showAppScreen();
+    btn.textContent = !isRegister ? 'Sign in' : 'Create account';
+    if (ok?.ok && !isRegister) showAppScreen();
   });
 }
 
@@ -855,7 +999,7 @@ function setupAuthScreen() {
 function setupAppEvents() {
   // Navigation
   document.addEventListener('click', e => {
-    const v = e.target.closest('[data-view]');
+    const v = e.target.closest('[data-view]:not(.view)');
     if (v && $('app-screen')?.contains(v)) { e.preventDefault(); UI.showView(v.dataset.view); $('acct-dropdown')?.classList.remove('open'); }
 
     const sc = e.target.closest('[data-scroll]');
@@ -979,6 +1123,45 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupAuthScreen();
   setupAppEvents();
   Wishlist._badge();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const path = window.location.pathname;
+  
+  let code = urlParams.get('code');
+  let view = urlParams.get('view');
+  
+  // Fallback for malformed URLs like ?view=reset-password?code=...
+  if (view && view.includes('?code=')) {
+     const parts = view.split('?code=');
+     view = parts[0];
+     code = parts[1];
+  }
+
+  // Handle email verification redirect
+  if (path === '/auth/verify-email' && code) {
+     const verified = await Auth.verifyEmail(code);
+     window.history.replaceState({}, document.title, '/'); // Reset URL
+     if (verified) {
+        Toast.show('Email verified successfully! You can now log in.', 'success', 5000);
+     } else {
+        Toast.show('Verification link is invalid or expired.', 'error', 5000);
+     }
+     showAuthScreen();
+     return;
+  }
+
+  // Handle password reset redirect
+  if (view === 'reset-password' && code) {
+     showAuthScreen();
+     $('login-view')?.classList.add('hidden');
+     $('reset-view')?.classList.remove('hidden');
+     
+     // Update the URL to remove the code so it doesn't stay in the address bar,
+     // but we inject the code into a hidden field or dataset so the form can use it!
+     window.history.replaceState({}, document.title, '/?view=reset-password');
+     $('reset-form').dataset.code = code;
+     return;
+  }
 
   // Try to restore a previous session silently
   const restored = await Auth.tryRestoreSession();

@@ -1,0 +1,22 @@
+Steps to run this project
+
+1) Install backend dependencies
+pip install -r requirements.txt
+
+2) Configure backend environment
+- Open backend/.env.example
+- Fill SMTP + SurrealDB values
+- Copy values into backend/.env
+
+3) Run backend
+cd backend
+uvicorn app.main:app --reload --port 8001
+
+4) Install and run frontend
+cd ../frontend
+npm install
+npm run dev
+
+5) URLs
+- Backend API docs: http://localhost:8001/docs
+- Frontend app: http://localhost:5173

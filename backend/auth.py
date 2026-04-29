@@ -15,6 +15,7 @@ from typing import Any, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
+import hashlib
 
 from config import settings
 from database import DB, get_db
@@ -62,6 +63,10 @@ def create_refresh_token(subject: str) -> str:
         + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
     }
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def decode_token(token: str) -> "dict[str, Any]":

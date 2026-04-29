@@ -1,0 +1,28 @@
+# Git
+.git/
+.gitignore
+
+# Backend services (each has its own build context)
+backend/
+surreal-auth-api/
+
+# Dev files
+*.md
+history.txt
+start_all.sh
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+
+# Env files
+.env
+backend/.env
+surreal-auth-api/backend/.env
+
+# OS
+.DS_Store

@@ -59,7 +59,7 @@ app.add_middleware(
 app.mount("/media", StaticFiles(directory=settings.MEDIA_DIR, check_dir=False), name="media")
 
 P = settings.API_PREFIX
-app.include_router(auth_router,          prefix=f"{P}/auth",        tags=["Auth"])
+app.include_router(auth_router,        prefix=f"{P}/auth",        tags=["Auth"])
 app.include_router(products_router,      prefix=f"{P}/products",     tags=["Products"])
 app.include_router(media_router,         prefix=f"{P}/products",     tags=["Media"])
 app.include_router(variants_router,      prefix=f"{P}/products",     tags=["Variants"])

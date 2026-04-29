@@ -197,6 +197,7 @@ img { display: block; max-width: 100%; }
    ============================================================ */
 #app-screen.hidden { display: none; }
 #auth-screen.hidden { display: none; }
+.auth-form-wrap.hidden { display: none !important; }
 
 
 /* ============================================================

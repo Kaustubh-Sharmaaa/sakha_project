@@ -1,6 +1,116 @@
 # API Reference & Integration Details
 
-## Environment Variables
+This document covers both REST APIs that make up the Sakha platform.
+
+| API | Base URL | Purpose |
+|---|---|---|
+| Main Product API | `http://localhost:8080/api/v1` | Products, cart, orders, reviews, analytics, etc. |
+| Auth Microservice | `http://localhost:8001` | Registration, login, email verification, password reset |
+
+The **frontend** (`http://localhost:3000`) routes all authentication calls to the Auth Microservice and all product/commerce calls to the Main Product API.
+
+---
+
+## Auth Microservice
+
+The Auth Microservice handles the full user authentication lifecycle. All endpoints are prefixed with `/auth`.
+
+### Endpoints
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `POST` | `/auth/signup` | — | Register a new account; triggers a verification email |
+| `POST` | `/auth/register` | — | Alias for `/auth/signup` |
+| `POST` | `/auth/login` | — | Log in; returns token pair — **requires verified email** |
+| `POST` | `/auth/refresh` | — | Exchange a refresh token for a new token pair |
+| `GET` | `/auth/me` | Bearer | Return the current user's profile |
+| `GET` | `/auth/verify-email` | — | Confirm an email address using a code sent by email |
+| `POST` | `/auth/reset-password/request` | — | Send a password reset link to an email address |
+| `GET` | `/auth/reset-password/verify` | — | Validate a password reset code |
+| `POST` | `/auth/reset-password/confirm` | — | Set a new password using a valid reset code |
+| `POST` | `/auth/logout` | — | Revoke the current refresh token / session |
+
+### Email Verification Requirement
+
+Accounts must verify their email address before they can log in. Attempting to log in with an unverified account returns:
+
+```
+HTTP 403 — "Please verify your email before signing in"
+```
+
+The verification link is emailed at signup and is valid for `EMAIL_VERIFICATION_TTL_SECONDS` (default 1 hour).
+
+### Token Flow
+
+```bash
+# 1. Register — triggers a verification email
+POST /auth/signup
+{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "password": "yourpassword"
+}
+# → returns the created user object (no token yet)
+
+# 2. Verify email — user clicks the link in their inbox
+GET /auth/verify-email?code=<code_from_email>
+# → { "verified": true }
+
+# 3. Log in — only works after verification
+POST /auth/login
+{ "email": "jane@example.com", "password": "yourpassword" }
+# → { "access_token": "...", "refresh_token": "...", "token_type": "bearer" }
+
+# 4. Get current user profile
+GET /auth/me
+Authorization: Bearer <access_token>
+
+# 5. Refresh when the access token expires (TTL: 15 minutes)
+POST /auth/refresh
+{ "refresh_token": "<refresh_token>" }
+# → new token pair
+
+# 6. Log out — revokes the session
+POST /auth/logout
+{ "refresh_token": "<refresh_token>" }
+```
+
+### Password Reset Flow
+
+```bash
+# 1. Request a reset link
+POST /auth/reset-password/request
+{ "email": "jane@example.com" }
+# → { "message": "If your email exists, a password reset link has been sent" }
+# (always returns 200 to avoid email enumeration)
+
+# 2. Validate the code (optional — the frontend does this on page load)
+GET /auth/reset-password/verify?code=<code_from_email>
+# → { "valid": true }
+
+# 3. Set the new password
+POST /auth/reset-password/confirm
+{
+  "code": "<code_from_email>",
+  "password": "newpassword",
+  "confirmPass": "newpassword"
+}
+# → { "success": true, "message": "Password reset successfully" }
+```
+
+Reset links are valid for `PASSWORD_RESET_TTL_SECONDS` (default 30 minutes) and can only be used once.
+
+### Auth Microservice Error Codes
+
+| Status | Meaning |
+|---|---|
+| `400` | Invalid or expired verification / reset code |
+| `401` | Missing, invalid, or expired token; wrong credentials |
+| `403` | Email not yet verified |
+
+---
+
+## Main Product API Environment Variables
 
 All settings are in `config.py` and can be overridden via a `.env` file in the `backend/` directory or via shell environment variables.
 
@@ -29,9 +139,9 @@ ALLOWED_ORIGINS=["https://yourfrontend.com"]
 
 ---
 
-## Authentication
+## Main Product API — Authentication
 
-Most write endpoints and all admin endpoints require a JWT Bearer token.
+Most write endpoints and all admin endpoints require a JWT Bearer token. Tokens are issued by the **Auth Microservice** (see above) and accepted by the Main Product API.
 
 ```
 Authorization: Bearer <access_token>
@@ -45,40 +155,17 @@ Authorization: Bearer <access_token>
 | `user` | Own cart, orders, reviews, wishlist |
 | `admin` | Everything, including analytics, bulk ops, coupon management, order status updates |
 
-### Token flow
-
-```bash
-# 1. Register
-POST /api/v1/auth/register
-{
-  "email": "you@example.com",
-  "password": "yourpassword",
-  "name": "Your Name",
-  "role": "user"
-}
-
-# 2. Login → receive access_token + refresh_token
-POST /api/v1/auth/login
-{ "email": "you@example.com", "password": "yourpassword" }
-
-# 3. Use the token
-GET /api/v1/auth/me
-Authorization: Bearer <access_token>
-
-# 4. Refresh when the access token expires
-POST /api/v1/auth/refresh
-{ "refresh_token": "<refresh_token>" }
-```
-
 ---
 
-## API Reference
+## Main Product API Reference
 
 All routes are prefixed with `/api/v1`. Auth requirements are noted as **[user]** or **[admin]**.
 
 ---
 
-### Auth
+### Auth (Main Product API)
+
+> The frontend uses the **Auth Microservice** (`localhost:8001`) for all auth flows. The routes below are the Main Product API's own auth layer, used for direct API / admin access.
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
